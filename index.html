@@ -1,0 +1,1309 @@
+als<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder OS — Set up Claude Code for your business</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:      #0a0a14;
+  --s1:      #111120;
+  --s2:      #181826;
+  --s3:      #1e1e2e;
+  --border:  #252540;
+  --border2: #30305a;
+  --accent:  #8182C1;
+  --accentL: #A3A4D8;
+  --accentD: #5a5b99;
+  --text:    #f0edee;
+  --muted:   #7a7580;
+  --dim:     #3d3d5c;
+  --green:   #4ade80;
+  --amber:   #fbbf24;
+  --red:     #f87171;
+  --font:    'IBM Plex Sans', sans-serif;
+  --mono:    'IBM Plex Mono', monospace;
+  --r:       12px;
+  --rs:      8px;
+}
+html,body { height:100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── PROGRESS BAR ── */
+#progress-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 3px; background: var(--border);
+}
+#progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accentD), var(--accentL));
+  width: 0%; transition: width 0.5s ease;
+}
+#progress-dots {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; z-index: 100;
+}
+.pdot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border2); transition: all 0.3s;
+}
+.pdot.active { background: var(--accentL); box-shadow: 0 0 8px rgba(163,164,216,0.5); }
+.pdot.done   { background: var(--green); }
+
+/* ── DAY BADGE ── */
+#day-badge {
+  position: fixed; top: 16px; right: 20px; z-index: 100;
+  font-size: 10.5px; font-family: var(--mono); color: var(--dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.pulse-dot { width:5px; height:5px; background:var(--green); border-radius:50%;
+  box-shadow:0 0 6px rgba(74,222,128,0.6); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 24px 32px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  transform: translateY(16px);
+  overflow-y: auto;
+}
+.screen.active { opacity: 1; pointer-events: all; transform: translateY(0); }
+.screen.exit   { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+
+.screen-inner { max-width: 600px; width: 100%; }
+.screen-inner.wide { max-width: 780px; }
+
+/* ── TYPE ── */
+.eyebrow {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--accentL); margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+.eyebrow::before { content:''; width:16px; height:1px; background:var(--accent); }
+h1 { font-size: clamp(30px,5vw,50px); font-weight:700; letter-spacing:-1.5px; line-height:1.08; margin-bottom:14px; }
+h1 span { color: var(--accentL); }
+h2 { font-size: clamp(22px,3.5vw,34px); font-weight:700; letter-spacing:-0.8px; line-height:1.15; margin-bottom:12px; }
+h2 span { color: var(--accentL); }
+h3 { font-size: 16px; font-weight:600; margin-bottom:8px; }
+.sub { font-size: 15px; color:var(--muted); line-height:1.65; margin-bottom:28px; }
+.sub.small { font-size: 13px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 26px; border-radius: var(--rs);
+  font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none;
+  border: none; font-family: var(--font); transition: all 0.18s; white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accentL); transform: translateY(-1px); }
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+.btn-ghost:hover { border-color: var(--accentD); color: var(--accentL); }
+.btn-green { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); color: var(--green); }
+.btn-green:hover { background: rgba(74,222,128,0.2); }
+.btn-sm { padding: 8px 16px; font-size: 13px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+/* ── CHOICE CARDS ── */
+.choice-grid { display: grid; gap: 10px; margin-top: 24px; }
+.choice-grid.cols2 { grid-template-columns: 1fr 1fr; }
+.choice-grid.cols3 { grid-template-columns: repeat(3,1fr); }
+
+.choice-card {
+  background: var(--s1); border: 2px solid var(--border);
+  border-radius: var(--r); padding: 22px 24px;
+  cursor: pointer; transition: all 0.2s; text-align: left;
+  position: relative; overflow: hidden;
+}
+.choice-card:hover {
+  border-color: var(--accentD);
+  background: var(--s2);
+  transform: translateY(-2px);
+}
+.choice-card.selected {
+  border-color: var(--accent);
+  background: rgba(129,130,193,0.08);
+}
+.choice-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(129,130,193,0.06), transparent 70%);
+  opacity: 0; transition: opacity 0.2s;
+}
+.choice-card:hover::after { opacity: 1; }
+.cc-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+.cc-title { font-weight: 700; font-size: 15px; margin-bottom: 5px; }
+.cc-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.cc-tag {
+  display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px;
+}
+.tag-green { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.tag-purple { background: rgba(129,130,193,0.1); color: var(--accentL); border: 1px solid rgba(129,130,193,0.2); }
+.tag-amber  { background: rgba(251,191,36,0.1); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: var(--s3); border: 1px solid var(--border);
+  border-radius: var(--rs); overflow: hidden; margin: 14px 0; position: relative;
+}
+.code-chrome {
+  background: #1a1a28; padding: 9px 14px; display: flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.dot-c { width:9px; height:9px; border-radius:50%; }
+.dot-c.r{background:#ff5f57} .dot-c.y{background:#febc2e} .dot-c.g{background:#28c840}
+.ct { flex:1; text-align:center; font-family:var(--mono); font-size:10.5px; color:var(--dim); margin-right:20px; }
+.code-body { padding: 16px 18px; font-family: var(--mono); font-size: 12px; line-height:1.75; color:var(--text); white-space:pre; overflow-x:auto; }
+.code-body::-webkit-scrollbar { height: 3px; }
+.code-body::-webkit-scrollbar-thumb { background: var(--border); }
+.copy-inline {
+  position: absolute; top: 38px; right: 10px;
+  background: rgba(129,130,193,0.1); border: 1px solid rgba(129,130,193,0.18);
+  border-radius: 5px; padding: 4px 10px; font-size: 10.5px;
+  font-family: var(--mono); color: var(--accentL); cursor: pointer; transition: all 0.15s;
+}
+.copy-inline:hover { background: rgba(129,130,193,0.2); }
+.copy-inline.ok { color: var(--green); border-color: rgba(74,222,128,0.3); }
+
+/* ── PROMPT BOX ── */
+.prompt-box { position: relative; }
+.prompt-body {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden;
+}
+.prompt-content {
+  padding: 22px 26px; font-family: var(--mono); font-size: 11.5px;
+  line-height: 1.85; color: var(--text); white-space: pre-wrap; word-break: break-word;
+  max-height: 300px; overflow-y: auto;
+}
+.prompt-content::-webkit-scrollbar { width: 3px; }
+.prompt-content::-webkit-scrollbar-thumb { background: var(--border); }
+.kw  { color: var(--accentL); font-weight: 600; }
+.q   { color: var(--green); }
+.cm  { color: var(--dim); font-style: italic; }
+.hl  { color: var(--accent); font-weight: 600; }
+.copy-prompt-btn {
+  width: 100%; margin-top: 10px; padding: 14px;
+  background: var(--accent); border: none; border-radius: var(--rs);
+  font-size: 14px; font-weight: 600; font-family: var(--font);
+  color: #fff; cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.copy-prompt-btn:hover { background: var(--accentL); }
+.copy-prompt-btn.ok { background: #16a34a; }
+
+/* ── STEP ROWS ── */
+.step-list { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+.step-row { display: flex; gap: 14px; align-items: flex-start; }
+.step-n {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(129,130,193,0.1); border: 1px solid rgba(129,130,193,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--accentL);
+  margin-top: 2px;
+}
+.step-n.done-n { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.3); color: var(--green); }
+.step-t { font-size: 13.5px; line-height: 1.55; }
+.step-t strong { display: block; color: var(--text); margin-bottom: 3px; }
+.step-t a { color: var(--accentL); text-decoration: none; }
+.step-t a:hover { text-decoration: underline; }
+code { font-family: var(--mono); font-size: 11.5px; background: rgba(129,130,193,0.1); border: 1px solid rgba(129,130,193,0.15); border-radius: 4px; padding: 1px 6px; color: var(--accentL); }
+
+/* ── ALERTS ── */
+.alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--rs); margin: 12px 0; font-size: 13px; line-height: 1.5; }
+.ai { flex-shrink:0; margin-top:1px; font-size:14px; }
+.a-info  { background:rgba(129,130,193,0.07); border:1px solid rgba(129,130,193,0.2); color:var(--accentL); }
+.a-warn  { background:rgba(251,191,36,0.07); border:1px solid rgba(251,191,36,0.2); color:var(--amber); }
+.a-ok    { background:rgba(74,222,128,0.07); border:1px solid rgba(74,222,128,0.2); color:var(--green); }
+.a-nocode{ background:rgba(129,130,193,0.05); border:1px solid rgba(129,130,193,0.15); color:var(--muted); }
+
+/* ── ERR DROPS ── */
+.err-list { display: flex; flex-direction: column; gap: 1px; margin-top: 8px; }
+.err-item { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 4px; }
+.err-head { padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; background: var(--s3); font-size: 12px; }
+.err-head:hover { background: var(--s2); }
+.err-label { color: var(--red); font-family: var(--mono); }
+.err-chev { color: var(--muted); transition: transform 0.2s; }
+.err-item.open .err-chev { transform: rotate(180deg); }
+.err-body { display: none; padding: 12px; border-top: 1px solid var(--border); background: var(--s1); font-size: 12.5px; line-height: 1.6; }
+.err-item.open .err-body { display: block; }
+.fix { color: var(--green); font-weight: 600; display: block; margin-bottom: 5px; }
+
+/* ── HOOK ROWS ── */
+.hook-row {
+  display: flex; gap: 14px; padding: 12px 14px;
+  background: var(--s3); border: 1px solid var(--border); border-radius: var(--rs); margin-bottom: 6px;
+}
+.hook-n { font-family: var(--mono); font-size: 11.5px; color: var(--accentL); font-weight: 600; min-width: 155px; flex-shrink: 0; }
+.hook-w { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--mono); margin-top: 3px; }
+.hook-d { font-size: 12.5px; color: var(--text); line-height: 1.5; }
+
+/* ── STATS ── */
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; background: var(--border); border-radius: var(--r); overflow: hidden; margin-top: 24px; }
+.stat-box { background: var(--s1); padding: 20px 16px; text-align: center; }
+.stat-num { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--accentL); display: block; }
+.stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── MCP PILLS ── */
+.mcp-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mp { background: rgba(129,130,193,0.07); border: 1px solid rgba(129,130,193,0.18); border-radius: 5px; padding: 3px 10px; font-size: 11px; font-family: var(--mono); color: var(--accentL); }
+
+/* ── MCP CATALOG ── */
+.mcp-cat { margin-bottom: 16px; }
+.mcp-cat-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.mcp-cat-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.mcp-pills-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-link {
+  display: inline-flex; align-items: center;
+  background: rgba(0,0,0,0);
+  border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+  border-radius: 5px; padding: 4px 10px;
+  font-size: 11.5px; font-family: var(--mono);
+  color: var(--c, var(--muted));
+  text-decoration: none;
+  transition: all 0.15s;
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+}
+.mp-link:hover {
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--c) 60%, transparent);
+}
+
+/* ── MCP FULL CARD ── */
+.mcp-full-card {
+  display: block; text-decoration: none; color: var(--text);
+  border-radius: var(--rs); padding: 14px 16px;
+  transition: all 0.15s;
+}
+.mcp-full-card:hover { transform: translateY(-2px); }
+.mfc-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: var(--text); }
+.mfc-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
+.mfc-link { font-size: 11px; font-family: var(--mono); color: var(--green); }
+
+/* ── DONE SCREEN ── */
+#s-done { text-align: center; }
+.done-icon { font-size: 56px; margin-bottom: 20px; animation: pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes pop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+
+/* ── NEXT CARDS ── */
+.next-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 18px; }
+.nc { background: var(--s1); border: 1px solid var(--border); border-radius: var(--rs); padding: 16px; }
+.nc-day { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
+.nc-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.nc-desc { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+.nc-cta { font-size: 11px; color: var(--accentL); margin-top: 8px; font-family: var(--mono); }
+
+/* ── HELP CARDS ── */
+.help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.hc { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 20px 22px; text-decoration: none; color: var(--text); transition: border-color 0.15s; }
+.hc:hover { border-color: var(--accentD); }
+.hc-icon { font-size: 20px; margin-bottom: 10px; }
+.hc-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.hc-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.hc-arrow { font-size: 12px; color: var(--accentL); margin-top: 10px; display: block; }
+
+/* ── CONFETTI CANVAS ── */
+#confetti-canvas {
+  position: fixed; inset: 0; pointer-events: none; z-index: 999;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--s3); border: 1px solid var(--border2);
+  border-radius: 100px; padding: 10px 20px;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  z-index: 200; transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast-icon { font-size: 16px; }
+
+/* ── WARP BADGE ── */
+.warp-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,200,130,0.07); border: 1px solid rgba(0,200,130,0.2);
+  border-radius: 6px; padding: 5px 12px;
+  font-size: 12px; color: #2dd4a0; font-family: var(--mono); text-decoration:none; transition:all 0.15s;
+}
+.warp-link:hover { background: rgba(0,200,130,0.14); }
+
+/* ── BACK BUTTON ── */
+#back-btn {
+  position: fixed; top: 18px; left: 18px; z-index: 100;
+  background: transparent; border: none; color: var(--muted);
+  font-size: 13px; font-family: var(--font); cursor: pointer;
+  display: none; align-items: center; gap: 5px; padding: 4px 8px;
+  border-radius: 5px; transition: color 0.15s;
+}
+#back-btn:hover { color: var(--accentL); }
+#back-btn.visible { display: flex; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .choice-grid.cols3,.choice-grid.cols2 { grid-template-columns:1fr; }
+  .stats-row,.next-grid,.help-grid { grid-template-columns:1fr 1fr; }
+  .stats-row { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS -->
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="progress-dots"></div>
+<div id="day-badge"><span class="pulse-dot"></span> 30 days of claude code · day 2</div>
+<button id="back-btn" onclick="goBack()">← back</button>
+
+<!-- CONFETTI CANVAS -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- TOAST -->
+<div id="toast"><span id="toast-icon">✓</span><span id="toast-msg">achievement unlocked</span></div>
+
+<!-- ════════════════════════════════════════════ SCREENS ════════════════════════════════════════════ -->
+
+<!-- S0: INTRO -->
+<div class="screen active" id="s-intro">
+<div class="screen-inner">
+  <div class="eyebrow">founder os</div>
+  <h1>your business.<br><span>inside claude.</span><br>permanently.</h1>
+  <p class="sub">one file. every session starts knowing who you are, what you're building, and how you work — without you re-explaining anything.</p>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="next('s-level')">let's set you up →</button>
+  </div>
+  <p style="font-size:12px;color:var(--dim);margin-top:18px;">takes 5 minutes · no coding required · works for any business</p>
+</div>
+</div>
+
+<!-- S1: LEVEL -->
+<div class="screen" id="s-level">
+<div class="screen-inner">
+  <div class="eyebrow">question 1 of 2</div>
+  <h2>where are you right now?</h2>
+  <p class="sub small">be honest — there's no wrong answer. this decides what we show you.</p>
+  <div class="choice-grid cols3">
+    <div class="choice-card" onclick="setLevel('beginner',this)">
+      <span class="cc-icon">🌱</span>
+      <div class="cc-tag tag-green">beginner</div>
+      <div class="cc-title">just starting out</div>
+      <div class="cc-desc">never opened a terminal, or just heard about Claude Code. starting from zero.</div>
+    </div>
+    <div class="choice-card" onclick="setLevel('maker',this)">
+      <span class="cc-icon">⚡</span>
+      <div class="cc-tag tag-amber">maker</div>
+      <div class="cc-title">i know some basics</div>
+      <div class="cc-desc">used Claude in the browser. comfortable with tools. not a developer.</div>
+    </div>
+    <div class="choice-card" onclick="setLevel('developer',this)">
+      <span class="cc-icon">🔥</span>
+      <div class="cc-tag tag-purple">developer</div>
+      <div class="cc-title">i'm a developer</div>
+      <div class="cc-desc">comfortable in the terminal. want the advanced setup. show me everything.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- S2: INSTALLED CHECK -->
+<div class="screen" id="s-installed">
+<div class="screen-inner">
+  <div class="eyebrow">question 2 of 2</div>
+  <h2 id="installed-title">have you installed<br>Claude Code?</h2>
+  <p class="sub small" id="installed-sub">Claude Code is the CLI — you run it from a terminal instead of a browser tab.</p>
+  <div class="choice-grid cols3" style="margin-top:24px;">
+    <div class="choice-card" onclick="setInstalled(false)">
+      <span class="cc-icon">📦</span>
+      <div class="cc-tag tag-green">new here</div>
+      <div class="cc-title">not yet</div>
+      <div class="cc-desc">show me how to install it step by step. i'll walk you through everything.</div>
+    </div>
+    <div class="choice-card" onclick="setInstalled(true)">
+      <span class="cc-icon">⚡</span>
+      <div class="cc-tag tag-amber">installed</div>
+      <div class="cc-title">yes — it's running</div>
+      <div class="cc-desc">i have it installed. help me write my CLAUDE.md and connect my tools.</div>
+    </div>
+    <div class="choice-card" onclick="setPowerUser(this)">
+      <span class="cc-icon">🚀</span>
+      <div class="cc-tag tag-purple">power user</div>
+      <div class="cc-title">installed + CLAUDE.md done</div>
+      <div class="cc-desc">already set up. show me the next level — plugin, MCPs, hooks, skills.</div>
+    </div>
+  </div>
+  <div id="nocode-note" class="alert a-nocode" style="display:none;margin-top:20px;">
+    <span class="ai">🙌</span>
+    <span>you don't need to know how to code. installing Claude Code is like installing any app — you paste a command and it's done. we'll guide you step by step and explain everything along the way.</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════ INSTALL PATH ══════ -->
+
+<!-- S3A: PREREQS -->
+<div class="screen" id="s-prereqs">
+<div class="screen-inner">
+  <div class="eyebrow">step 1 of 4 · getting ready</div>
+  <h2>you'll need <span>3 things</span> first</h2>
+  <p class="sub small" id="prereq-sub">none of these cost anything to start — and we'll link you to each one.</p>
+  <div class="step-list">
+    <div class="step-row">
+      <div class="step-n">1</div>
+      <div class="step-t">
+        <strong>a modern terminal — download Warp (free, recommended)</strong>
+        Warp is a terminal built for humans. better than the default Terminal app — it has autocomplete, AI suggestions, and works out of the box.<br><br>
+        <a href="https://warp.dev" target="_blank" class="warp-link">⚡ download Warp at warp.dev</a>
+        <div style="font-size:12px;color:var(--dim);margin-top:8px;">already have a terminal you like? keep using it. this step is optional.</div>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">2</div>
+      <div class="step-t">
+        <strong>Node.js (version 18 or higher)</strong>
+        Claude Code runs on Node.js. Check if you have it by opening your terminal and typing:
+        <div class="code-block" style="margin:8px 0;"><div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div class="ct">terminal</div></div><div class="code-body">node --version</div></div>
+        See <code>v18</code> or higher? ✓ you're good.<br>
+        See "command not found"? → <a href="https://nodejs.org/en/download" target="_blank">download Node.js (LTS) here</a>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">3</div>
+      <div class="step-t">
+        <strong>a Claude Pro account ($20/mo)</strong>
+        Claude Code requires Claude Pro or an API key. <a href="https://claude.ai/upgrade" target="_blank">upgrade here</a> if you're on the free plan.
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="next('s-install-claude')">I have all 3 →</button>
+    <button class="btn btn-ghost btn-sm" onclick="showHelp()">need help with any of these</button>
+  </div>
+</div>
+</div>
+
+<!-- S3B: INSTALL CLAUDE CODE -->
+<div class="screen" id="s-install-claude">
+<div class="screen-inner">
+  <div class="eyebrow">step 2 of 4 · installing</div>
+  <h2>install <span>Claude Code</span></h2>
+  <p class="sub small" id="install-sub">open your terminal and run this one command:</p>
+
+  <div class="code-block">
+    <div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div class="ct">terminal</div></div>
+    <button class="copy-inline" onclick="copyCode(this,'npm install -g @anthropic-ai/claude-code')">copy</button>
+    <div class="code-body">npm install -g @anthropic-ai/claude-code</div>
+  </div>
+
+  <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">then open your project folder and start it:</p>
+
+  <div class="code-block">
+    <div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div class="ct">terminal</div></div>
+    <div class="code-body">cd ~/Documents/my-project
+claude</div>
+  </div>
+
+  <details style="margin-top:16px;">
+    <summary style="cursor:pointer;font-size:13px;color:var(--amber);font-weight:600;list-style:none;display:flex;align-items:center;gap:6px;">
+      ▸ running into an error?
+    </summary>
+    <div class="err-list" style="margin-top:10px;">
+      <div class="err-item" onclick="this.classList.toggle('open')">
+        <div class="err-head"><span class="err-label">command not found: npm</span><span class="err-chev">▾</span></div>
+        <div class="err-body"><span class="fix">Node.js isn't installed.</span><a href="https://nodejs.org/en/download" target="_blank" style="color:var(--accentL);">Download it here</a> (LTS version) → install → restart terminal → try again.</div>
+      </div>
+      <div class="err-item" onclick="this.classList.toggle('open')">
+        <div class="err-head"><span class="err-label">EACCES: permission denied</span><span class="err-chev">▾</span></div>
+        <div class="err-body"><span class="fix">npm doesn't have write access. add sudo:</span><div class="code-block" style="margin:6px 0;"><div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div></div><div class="code-body">sudo npm install -g @anthropic-ai/claude-code</div></div>Type your Mac password when asked (nothing shows — that's normal).</div>
+      </div>
+      <div class="err-item" onclick="this.classList.toggle('open')">
+        <div class="err-head"><span class="err-label">command not found: claude</span><span class="err-chev">▾</span></div>
+        <div class="err-body"><span class="fix">Install succeeded but terminal can't find it yet.</span>Close and reopen your terminal, then try <code>claude</code> again.</div>
+      </div>
+      <div class="err-item" onclick="this.classList.toggle('open')">
+        <div class="err-head"><span class="err-label">login fails / browser won't open</span><span class="err-chev">▾</span></div>
+        <div class="err-body"><span class="fix">Use API key login instead:</span>Get your key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accentL);">console.anthropic.com</a> then run:<div class="code-block" style="margin:6px 0;"><div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div></div><div class="code-body">export ANTHROPIC_API_KEY=sk-ant-your-key
+claude</div></div></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="alert a-info" style="margin-top:14px;"><span class="ai">💬</span><span>still stuck? <a href="https://www.linkedin.com/in/walid-boulanouar/" target="_blank" style="color:var(--accentL);">message me on LinkedIn</a> — show me the error and i'll help you get unstuck.</span></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="achieve('Claude Code installed 🔧'); next('s-second-brain')">it's running! →</button>
+  </div>
+</div>
+</div>
+
+<!-- S3C: SECOND BRAIN + ARSCONTEXTA -->
+<div class="screen" id="s-second-brain">
+<div class="screen-inner wide">
+  <div class="eyebrow">step 3 of 4 · your second brain</div>
+  <h2>set up your <span>folder structure</span></h2>
+  <p class="sub small">this is what lets claude navigate your business without being told where to look.</p>
+
+  <div class="choice-grid cols2">
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">option A · manual setup</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:10px;">create the PARA structure yourself</div>
+      <div class="code-block" style="margin-bottom:0;"><div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div class="ct">folder structure</div></div><div class="code-body" style="font-size:11px;">second-brain/
+├── 00_Inbox/
+├── 01_Projects/
+│   └── Clients/Active/
+├── 02_Areas/
+├── 03_Resources/
+└── CLAUDE.md    ← create this next</div></div>
+    </div>
+    <div style="background:rgba(129,130,193,0.05);border:1px solid rgba(129,130,193,0.2);border-radius:var(--r);padding:22px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--accentL);">⚡ option B · arscontexta plugin</div>
+        <a href="https://github.com/agenticnotetaking/arscontexta" target="_blank" style="font-size:10.5px;font-family:var(--mono);color:var(--dim);text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:2px 8px;flex-shrink:0;">github ↗</a>
+      </div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:6px;">the second brain plugin</div>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;">instead of copying a template, it <strong style="color:var(--text);">interviews you for 20 minutes</strong> and generates a knowledge system tailored to how your brain works. no template — your exact cognitive architecture.</p>
+      <div class="code-block"><div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div class="ct">claude code terminal</div></div><div class="code-body" style="font-size:11px;">/plugin marketplace add agenticnotetaking/arscontexta
+/plugin install arscontexta@agenticnotetaking
+/arscontexta:setup</div></div>
+      <p style="font-size:11.5px;color:var(--dim);margin-top:6px;">requires <code>tree</code> + <code>ripgrep</code> — install with: <code>brew install tree ripgrep</code></p>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="achieve('Second brain ready 📁'); next('s-claude-md')">folder is ready →</button>
+  </div>
+</div>
+</div>
+
+<!-- S4: CLAUDE.MD PROMPT (SHARED) -->
+<div class="screen" id="s-claude-md">
+<div class="screen-inner">
+  <div class="eyebrow" id="claudemd-eyebrow">step 4 of 4 · the key file</div>
+  <h2>write your <span>CLAUDE.md</span></h2>
+  <p class="sub small">paste this into Claude Code. it will ask you 8 questions, then generate your complete setup.</p>
+
+  <div class="prompt-box">
+    <div class="prompt-body">
+      <div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div style="flex:1;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-right:20px;">paste into claude code</div></div>
+      <div class="prompt-content"><span class="hl">you are setting up my CLAUDE.md</span> — the file that makes you understand my business permanently.
+
+<span class="cm">// founder interview. one group at a time. wait for answers.</span>
+
+<span class="kw">GROUP 1 — your world</span>
+<span class="q">1.</span> what does your company do? (2-3 sentences)
+<span class="q">2.</span> your role, and how many people on the team?
+<span class="q">3.</span> current clients or customers?
+
+<span class="cm">→ wait. then group 2.</span>
+
+<span class="kw">GROUP 2 — your tools and pain</span>
+<span class="q">4.</span> tools you open every single day?
+<span class="q">5.</span> tasks that repeat and feel like a waste of time?
+<span class="q">6.</span> biggest focus this month — the ONE thing?
+
+<span class="cm">→ wait. then group 3.</span>
+
+<span class="kw">GROUP 3 — your rules</span>
+<span class="q">7.</span> what should you NEVER do without asking me first?
+<span class="q">8.</span> existing folder structure, or starting fresh?
+
+<span class="cm">→ generate all 3 outputs after all answers.</span>
+
+<span class="kw">OUTPUT 1 — CLAUDE.md</span>
+include: who i am | clients | tools | focus | tasks to automate
+<span class="hl">must include:</span>
+- how to navigate: explore folders freely. find client folders when asked. if a skill exists, use it.
+- how to work with me: ONE clarifying question when unclear. confirm before irreversible actions. flag anything risky.
+- my rules
+
+<span class="kw">OUTPUT 2 — folder structure</span>
+00_Inbox/ 01_Projects/Clients/Active/ 02_Areas/ 03_Resources/ CLAUDE.md
+
+<span class="kw">OUTPUT 3 — first 3 MCPs</span>
+based on their tools. one line each: tool → what it unlocks.</div>
+    </div>
+    <button class="copy-prompt-btn" id="copy-main-btn" onclick="copyMainPrompt()">
+      <span>copy the prompt</span>
+    </button>
+  </div>
+
+  <div class="btn-row" id="after-copy-row" style="display:none;">
+    <button class="btn btn-primary" onclick="next(STATE.path==='advanced'?'s-mcps':'s-next-steps')">prompt is pasted — what's next →</button>
+  </div>
+</div>
+</div>
+
+<!-- S5A: NEXT STEPS (install path) -->
+<div class="screen" id="s-next-steps">
+<div class="screen-inner wide">
+  <div class="eyebrow">you're all set 🎉</div>
+  <h2>the foundation is live.<br><span>here's what comes next.</span></h2>
+  <p class="sub small">follow the series — one drop per day at 10am. each one builds on the last.</p>
+
+  <div class="next-grid">
+    <div class="nc">
+      <div class="nc-day">day 3 · tomorrow</div>
+      <div class="nc-title">MCPs</div>
+      <div class="nc-desc">connect claude to Slack, your CRM, LinkedIn, GitHub. all from the terminal.</div>
+      <div class="nc-cta">comment STACK →</div>
+    </div>
+    <div class="nc">
+      <div class="nc-day">day 4</div>
+      <div class="nc-title">Skills</div>
+      <div class="nc-desc">build a skill that runs any task the same way, every time, without re-explaining.</div>
+      <div class="nc-cta">comment SKILL →</div>
+    </div>
+    <div class="nc">
+      <div class="nc-day">day 5</div>
+      <div class="nc-title">Hooks</div>
+      <div class="nc-desc">safety scripts that run automatically. first open-source drop of the series.</div>
+      <div class="nc-cta">comment HOOKS →</div>
+    </div>
+  </div>
+
+  <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-top:18px;display:flex;align-items:flex-start;gap:14px;">
+    <div style="font-size:22px;flex-shrink:0;">📚</div>
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:4px;">bonus — community skills list</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">i like <a href="https://github.com/sickn33/antigravity-awesome-skills" target="_blank" style="color:var(--accentL);text-decoration:none;">this list of community skills</a> — good inspiration for what to build first. i'll drop mine in a few days. follow the series to get it.</div>
+      <a href="https://github.com/sickn33/antigravity-awesome-skills" target="_blank" style="font-size:11px;font-family:var(--mono);color:var(--muted);text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:5px;padding:4px 10px;transition:color 0.15s;display:inline-block;" onmouseover="this.style.color='#A3A4D8'" onmouseout="this.style.color='#7a7580'">github.com/sickn33/antigravity-awesome-skills ↗</a>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="next('s-done')">I'm ready →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════ ADVANCED PATH ══════ -->
+
+<!-- S5B: ARSCONTEXTA (advanced) -->
+<div class="screen" id="s-arscontexta">
+<div class="screen-inner">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
+    <div class="eyebrow" style="margin-bottom:0;">power move · the second brain plugin</div>
+    <a href="https://github.com/agenticnotetaking/arscontexta" target="_blank" style="font-size:11px;font-family:var(--mono);color:var(--muted);text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:5px;padding:4px 10px;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='#A3A4D8'" onmouseout="this.style.color='#7a7580'">github.com/agenticnotetaking/arscontexta ↗</a>
+  </div>
+  <h2 style="margin-top:14px;"><span>arscontexta</span> — your personal knowledge system</h2>
+  <p class="sub small">this Claude Code plugin doesn't use a template. it interviews you and derives a knowledge architecture from how <em>your brain actually works</em>.</p>
+
+  <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;">
+      <div style="text-align:center;padding:14px;background:var(--s3);border-radius:var(--rs);">
+        <div style="font-size:20px;margin-bottom:6px;">🧠</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">derives, not templates</div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">every decision traces back to cognitive science research</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--s3);border-radius:var(--rs);">
+        <div style="font-size:20px;margin-bottom:6px;">🔗</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">wiki-linked vault</div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">markdown files connected by links — no vendor lock-in</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--s3);border-radius:var(--rs);">
+        <div style="font-size:20px;margin-bottom:6px;">⚡</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">6-phase pipeline</div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">Record → Reduce → Reflect → Reweave → Verify → Rethink</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">install in 3 commands</div>
+    <div class="code-block">
+      <div class="code-chrome"><div class="dot-c r"></div><div class="dot-c y"></div><div class="dot-c g"></div><div class="ct">claude code terminal</div></div>
+      <button class="copy-inline" onclick="copyCode(this,'/plugin marketplace add agenticnotetaking/arscontexta\n/plugin install arscontexta@agenticnotetaking\n/arscontexta:setup')">copy</button>
+      <div class="code-body">/plugin marketplace add agenticnotetaking/arscontexta
+/plugin install arscontexta@agenticnotetaking
+/arscontexta:setup</div>
+    </div>
+    <p style="font-size:12px;color:var(--dim);">prerequisites: <code>brew install tree ripgrep</code> · requires Claude Code v1.0.33+</p>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="next('s-mcps')">got it — show me MCPs →</button>
+    <button class="btn btn-ghost btn-sm" onclick="next('s-mcps')">skip for now</button>
+  </div>
+</div>
+</div>
+
+<!-- S6: MCPS (advanced) -->
+<div class="screen" id="s-mcps" style="justify-content:flex-start;padding-top:72px;">
+<div class="screen-inner wide" style="padding-bottom:40px;">
+  <div class="eyebrow">next layer · connect everything</div>
+  <h2>MCPs — <span>claude connects to anything</span></h2>
+  <p class="sub small">MCP = Model Context Protocol. one connection = claude can read, write, and act inside that tool — no copy-paste, no tab switching. start with 2. grow from there.</p>
+
+  <!-- HOW TO FIND -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+    <a href="https://smithery.ai" target="_blank" style="text-decoration:none;background:rgba(129,130,193,0.07);border:1px solid rgba(129,130,193,0.25);border-radius:var(--r);padding:18px 20px;display:block;transition:all 0.15s;" onmouseover="this.style.borderColor='#8182C1'" onmouseout="this.style.borderColor='rgba(129,130,193,0.25)'">
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--accentL);margin-bottom:8px;">🏪 smithery.ai — the MCP marketplace</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">browse 2,000+ MCPs in one place</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;">search by tool name, copy the install command, done. the easiest way to discover what exists.</div>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--accentL);margin-top:10px;">smithery.ai ↗</div>
+    </a>
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;">
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">🔍 how to find any MCP</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">can't find it? just search:</div>
+      <div style="font-family:var(--mono);font-size:12.5px;background:var(--s3);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;color:var(--accentL);margin-bottom:8px;">"tool name" + mcp github</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;">or go to smithery.ai and search the tool name. if a community built it, it'll be there. over 2,000 MCPs exist as of early 2026.</div>
+    </div>
+  </div>
+
+  <!-- START HERE -->
+  <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:8px;"><span style="width:18px;height:1px;background:var(--green);display:inline-block;"></span> start with these 2</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:22px;">
+    <a href="https://smithery.ai" target="_blank" class="mcp-full-card" style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);">
+      <div class="mfc-name">Notion</div><div class="mfc-desc">read/write any page, create databases, import docs — without opening the browser</div><div class="mfc-link">smithery ↗</div>
+    </a>
+    <a href="https://smithery.ai" target="_blank" class="mcp-full-card" style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);">
+      <div class="mfc-name">Slack</div><div class="mfc-desc">digest any channel, draft replies, summarize a week of conversations. your inbox becomes searchable.</div><div class="mfc-link">smithery ↗</div>
+    </a>
+  </div>
+
+  <!-- CATEGORY: PRODUCTIVITY -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#60a5fa;">📋 productivity & docs</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Notion</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Google Drive</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Gmail</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Google Calendar</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Google Docs</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Obsidian</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Filesystem <span style="font-size:9px;opacity:0.7;">(built-in)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Dropbox</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">OneDrive</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#60a5fa;">Evernote</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: COMMUNICATION -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#4ade80;">💬 communication</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Slack</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Discord</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Microsoft Teams</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Telegram</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">WhatsApp (Unipile)</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Zoom</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Intercom</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Twilio</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: SOCIAL -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#f472b6;">📱 social & outreach</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f472b6;">LinkedIn (Unipile)</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f472b6;">Twitter / X</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f472b6;">Reddit</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f472b6;">YouTube</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f472b6;">Anysite <span style="font-size:9px;opacity:0.7;">(scrape anything)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f472b6;">Instagram</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: DEV -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#fb923c;">🔧 dev & engineering</div>
+    <div class="mcp-pills-row">
+      <a href="https://github.com/github/github-mcp-server" target="_blank" class="mp-link" style="--c:#fb923c;">GitHub <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">GitLab</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Linear</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Jira</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Asana</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Sentry</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Docker</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Kubernetes</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">Vercel</a>
+      <a href="https://github.com/cloudflare/mcp-server-cloudflare" target="_blank" class="mp-link" style="--c:#fb923c;">Cloudflare <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fb923c;">AWS</a>
+      <a href="https://github.com/microsoft/playwright-mcp" target="_blank" class="mp-link" style="--c:#fb923c;">Playwright <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: DATABASES -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#fbbf24;">🗄️ databases</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">PostgreSQL</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">MySQL</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">SQLite</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">MongoDB</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">Redis</a>
+      <a href="https://github.com/supabase-community/supabase-mcp" target="_blank" class="mp-link" style="--c:#fbbf24;">Supabase <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">Airtable</a>
+      <a href="https://github.com/gannonh/firebase-mcp" target="_blank" class="mp-link" style="--c:#fbbf24;">Firebase</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#fbbf24;">Snowflake</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: CRM -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#a78bfa;">💼 CRM & sales</div>
+    <div class="mcp-pills-row">
+      <a href="https://github.com/HubSpot/hubspot-mcp-server" target="_blank" class="mp-link" style="--c:#a78bfa;">HubSpot <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#a78bfa;">Salesforce</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#a78bfa;">Attio</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#a78bfa;">Pipedrive</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#a78bfa;">Close</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#a78bfa;">Clay</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#a78bfa;">Apollo</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: FINANCE -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#2dd4bf;">💳 finance & commerce</div>
+    <div class="mcp-pills-row">
+      <a href="https://github.com/stripe/agent-toolkit" target="_blank" class="mp-link" style="--c:#2dd4bf;">Stripe <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://github.com/Shopify/dev-mcp" target="_blank" class="mp-link" style="--c:#2dd4bf;">Shopify <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#2dd4bf;">QuickBooks</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#2dd4bf;">Xero</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#2dd4bf;">PayPal</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: AI & RESEARCH -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#f87171;">🤖 AI & research</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Perplexity</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Brave Search</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Web Fetch <span style="font-size:9px;opacity:0.7;">(built-in)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">ElevenLabs <span style="font-size:9px;opacity:0.7;">(official)</span></a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Replicate</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Wikipedia</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">arXiv</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Wolfram Alpha</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#f87171;">Sequential Thinking</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: AUTOMATION -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#4ade80;">⚡ automation</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">n8n</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Zapier</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Make</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#4ade80;">Activepieces</a>
+    </div>
+  </div>
+
+  <!-- CATEGORY: DESIGN -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:#e879f9;">🎨 design & media</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#e879f9;">Figma</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#e879f9;">Canva</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#e879f9;">Unsplash</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#e879f9;">Cloudinary</a>
+    </div>
+  </div>
+
+  <!-- CORE -->
+  <div class="mcp-cat">
+    <div class="mcp-cat-label" style="color:var(--muted);">🔌 core / built-in</div>
+    <div class="mcp-pills-row">
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#7a7580;">Filesystem</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#7a7580;">Memory</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#7a7580;">Browser / Fetch</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#7a7580;">Sequential Thinking</a>
+      <a href="https://smithery.ai" target="_blank" class="mp-link" style="--c:#7a7580;">Time</a>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:16px 0 4px;font-size:12.5px;color:var(--dim);">
+    ... and 2,000+ more at <a href="https://smithery.ai" target="_blank" style="color:var(--accentL);text-decoration:none;">smithery.ai</a>. if a tool exists, someone probably built an MCP for it.
+  </div>
+
+  <div class="alert a-warn" style="margin-top:14px;"><span class="ai">📅</span><span><strong>full install guide drops tomorrow (day 3)</strong> — exact commands for each MCP. comment <strong>STACK</strong> on the post.</span></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="next('s-hooks')">show me hooks →</button>
+  </div>
+</div>
+</div>
+
+<!-- S7: HOOKS (advanced) -->
+<div class="screen" id="s-hooks">
+<div class="screen-inner wide">
+  <div class="eyebrow">final layer · safety net</div>
+  <h2>hooks — <span>invisible guardrails</span></h2>
+  <p class="sub small">shell scripts that run automatically before/after claude takes any action. you don't think about them. they just work.</p>
+
+  <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0;">
+      <div style="padding:10px;background:var(--s3);border-radius:var(--rs);border:1px solid var(--border);">
+        <div style="font-size:10.5px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;">PreToolUse</div>
+        <div style="font-size:12.5px;color:var(--muted);">runs <em>before</em> claude acts. can inspect, block, or modify the action.</div>
+      </div>
+      <div style="padding:10px;background:var(--s3);border-radius:var(--rs);border:1px solid var(--border);">
+        <div style="font-size:10.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;">PostToolUse</div>
+        <div style="font-size:12.5px;color:var(--muted);">runs <em>after</em> claude acts. can log, notify, or trigger something else.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hook-row"><div><div class="hook-n">bash-safety.sh</div><div class="hook-w">PreToolUse · Bash</div></div><div class="hook-d">blocks forever: <code>git commit</code>, <code>force push</code>, <code>reset --hard</code>, <code>rm -rf</code></div></div>
+  <div class="hook-row"><div><div class="hook-n">file-protection.sh</div><div class="hook-w">PreToolUse · Edit</div></div><div class="hook-d">blocks edits to <code>.env</code> and credentials. warns before touching CLAUDE.md.</div></div>
+  <div class="hook-row"><div><div class="hook-n">file-backup.sh</div><div class="hook-w">PreToolUse · Edit</div></div><div class="hook-d">auto-backups every file before editing. keeps last 10 versions. undo anything.</div></div>
+  <div class="hook-row"><div><div class="hook-n">file-logger.sh</div><div class="hook-w">PostToolUse · Write</div></div><div class="hook-d">logs every file change to a daily audit log. see exactly what claude touched.</div></div>
+  <div class="hook-row"><div><div class="hook-n">stop-notify.sh</div><div class="hook-w">Stop event</div></div><div class="hook-d">plays a sound + macOS notification when claude finishes. walk away, come back when done.</div></div>
+
+  <div class="alert a-info" style="margin-top:12px;"><span class="ai">📦</span><span>full hooks bundle ships as a <strong>free GitHub drop on day 5</strong>. comment <strong>HOOKS</strong> on that post to get the link.</span></div>
+
+  <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-top:12px;display:flex;align-items:flex-start;gap:14px;">
+    <div style="font-size:22px;flex-shrink:0;">📚</div>
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:4px;">skills — community list</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">i like <a href="https://github.com/sickn33/antigravity-awesome-skills" target="_blank" style="color:var(--accentL);text-decoration:none;">this community skills list</a> — good starting point. i'll be dropping mine in a few days. follow to get it.</div>
+      <a href="https://github.com/sickn33/antigravity-awesome-skills" target="_blank" style="font-size:11px;font-family:var(--mono);color:var(--muted);text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:5px;padding:4px 10px;transition:color 0.15s;display:inline-block;" onmouseover="this.style.color='#A3A4D8'" onmouseout="this.style.color='#7a7580'">github.com/sickn33/antigravity-awesome-skills ↗</a>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="achieve('Full setup complete 🏆'); next('s-done')">i'm fully set up →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════ DONE ══════ -->
+<div class="screen" id="s-done">
+<div class="screen-inner" style="text-align:center;">
+  <div class="done-icon">🚀</div>
+  <div class="eyebrow" style="justify-content:center;">you made it</div>
+  <h2 style="margin-bottom:10px;">you're <span>all set up.</span></h2>
+  <p class="sub" style="max-width:440px;margin:0 auto 32px;">every session now starts in context. claude knows your business, your rules, your tools. you stop re-explaining and start doing.</p>
+
+  <div class="stats-row" style="max-width:440px;margin:0 auto 28px;">
+    <div class="stat-box"><span class="stat-num">20</span><div class="stat-lbl">active clients run through this</div></div>
+    <div class="stat-box"><span class="stat-num">25+</span><div class="stat-lbl">reusable skills built on top</div></div>
+    <div class="stat-box"><span class="stat-num">7</span><div class="stat-lbl">MCPs connected</div></div>
+    <div class="stat-box"><span class="stat-num">1</span><div class="stat-lbl">terminal instead of 7 tabs</div></div>
+  </div>
+
+  <div class="help-grid" style="max-width:440px;margin:0 auto;">
+    <a href="https://www.linkedin.com/in/walid-boulanouar/" target="_blank" class="hc">
+      <div class="hc-icon">💬</div>
+      <div class="hc-title">stuck? message me on LinkedIn</div>
+      <div class="hc-desc">show me where you're blocked. i'll reply.</div>
+      <span class="hc-arrow">LinkedIn →</span>
+    </a>
+    <div class="hc" style="cursor:default;">
+      <div class="hc-icon">🎥</div>
+      <div class="hc-title">video walkthroughs coming</div>
+      <div class="hc-desc">i'll drop step-by-step videos for each part of the series. follow to get them.</div>
+      <span class="hc-arrow" style="color:var(--muted);">follow the series →</span>
+    </div>
+  </div>
+
+  <div style="max-width:440px;margin:20px auto 0;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;text-align:left;">
+    <div style="font-size:11.5px;color:var(--muted);line-height:1.6;">
+      <strong style="color:var(--text);">need hands-on help?</strong> if you want a 1:1 session where we set this up together live on your machine — message me on LinkedIn and ask. it's a paid session. worth it if you want to move fast.
+    </div>
+  </div>
+
+  <p style="margin-top:24px;font-size:12px;color:var(--dim);">day 2 of 30 · tips drop daily at 10am · <a href="https://www.linkedin.com/in/walid-boulanouar/" style="color:var(--accentL);text-decoration:none;">follow walid boulanouar on linkedin</a></p>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════ JAVASCRIPT ════════════════════════════════════════════ -->
+<script>
+/* ── STATE ── */
+const STATE = {
+  level: null,
+  installed: null,
+  path: null,
+  history: [],
+  screen: 's-intro',
+  promptCopied: false
+};
+
+/* ── PATH DEFINITIONS ── */
+const PATHS = {
+  install: ['s-intro','s-level','s-installed','s-prereqs','s-install-claude','s-second-brain','s-claude-md','s-next-steps','s-done'],
+  advanced: ['s-intro','s-level','s-installed','s-claude-md','s-arscontexta','s-mcps','s-hooks','s-done'],
+  power: ['s-intro','s-level','s-installed','s-arscontexta','s-mcps','s-hooks','s-done']
+};
+
+function getPath() {
+  return STATE.path ? PATHS[STATE.path] : ['s-intro','s-level','s-installed'];
+}
+
+/* ── NAVIGATION ── */
+function next(screenId) {
+  goTo(screenId);
+}
+
+function goTo(id) {
+  const current = document.querySelector('.screen.active');
+  if (current && current.id !== id) {
+    current.classList.add('exit');
+    setTimeout(() => current.classList.remove('active','exit'), 350);
+  }
+  STATE.history.push(STATE.screen);
+  STATE.screen = id;
+  const target = document.getElementById(id);
+  if (target) {
+    setTimeout(() => {
+      target.classList.add('active');
+      updateProgress();
+    }, 50);
+  }
+  // back button
+  document.getElementById('back-btn').classList.toggle('visible', STATE.history.length > 1);
+}
+
+function goBack() {
+  if (STATE.history.length === 0) return;
+  const prev = STATE.history.pop();
+  const current = document.querySelector('.screen.active');
+  if (current) { current.classList.add('exit'); setTimeout(() => current.classList.remove('active','exit'), 350); }
+  STATE.screen = prev;
+  const target = document.getElementById(prev);
+  if (target) { setTimeout(() => { target.classList.add('active'); updateProgress(); }, 50); }
+  document.getElementById('back-btn').classList.toggle('visible', STATE.history.length > 0);
+}
+
+/* ── PROGRESS ── */
+function updateProgress() {
+  const path = getPath();
+  const idx = path.indexOf(STATE.screen);
+  const total = path.length - 1;
+  const pct = idx < 0 ? 0 : Math.round((idx / total) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  renderDots(path, idx);
+}
+
+function renderDots(path, idx) {
+  const el = document.getElementById('progress-dots');
+  if (path.length <= 2) { el.innerHTML=''; return; }
+  el.innerHTML = path.slice(1).map((_, i) => {
+    const real = i + 1;
+    let cls = 'pdot';
+    if (real < idx) cls += ' done';
+    else if (real === idx) cls += ' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+
+/* ── LEVEL SELECT ── */
+function setLevel(level, card) {
+  STATE.level = level;
+  document.querySelectorAll('#s-level .choice-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  // small confetti
+  launchConfetti(0.3);
+  // show installed check with adapted copy
+  if (level === 'beginner') {
+    document.getElementById('installed-title').innerHTML = 'have you installed<br>Claude Code?';
+    document.getElementById('installed-sub').textContent = 'don\'t worry if you haven\'t — we\'ll walk through it step by step. promise it\'s not as scary as it sounds.';
+    document.getElementById('nocode-note').style.display = 'flex';
+  } else if (level === 'developer') {
+    document.getElementById('installed-title').innerHTML = 'is Claude Code<br>already running?';
+    document.getElementById('installed-sub').textContent = 'if you have it installed, we\'ll go straight to the advanced setup.';
+    document.getElementById('nocode-note').style.display = 'none';
+  } else {
+    document.getElementById('nocode-note').style.display = 'none';
+  }
+  setTimeout(() => next('s-installed'), 300);
+}
+
+/* ── INSTALLED CHECK ── */
+function setInstalled(installed) {
+  STATE.installed = installed;
+  if (installed) {
+    STATE.path = 'advanced';
+    document.getElementById('claudemd-eyebrow').textContent = 'step 1 · the key file';
+    achieve('Already running ⚡');
+    next('s-claude-md');
+  } else {
+    STATE.path = 'install';
+    document.getElementById('claudemd-eyebrow').textContent = 'step 4 of 4 · the key file';
+    next('s-prereqs');
+  }
+  updateProgress();
+}
+
+function setPowerUser(card) {
+  STATE.installed = true;
+  STATE.path = 'power';
+  achieve('Power user mode 🚀');
+  next('s-arscontexta');
+  updateProgress();
+}
+
+/* ── COPY PROMPT ── */
+const PROMPT_TEXT = `you are setting up my CLAUDE.md — the file that makes you understand my business permanently, from session one.
+
+this is a founder interview. ask me questions one group at a time. wait for my answers before moving to the next group. do not guess.
+
+GROUP 1 — your world
+1. what does your company or project do? (plain language, 2-3 sentences)
+2. what is your role, and roughly how many people are on your team?
+3. who are your current clients or customers?
+
+wait for my answers. then move to group 2.
+
+GROUP 2 — your tools and pain
+4. what tools do you open every single day?
+5. what tasks do you repeat most often that feel like a waste of time? (3-5 things)
+6. what is your biggest focus this month — the ONE thing?
+
+wait for my answers. then move to group 3.
+
+GROUP 3 — your rules
+7. what should you NEVER do without asking me first?
+8. do you have an existing folder structure, or are we starting from scratch?
+
+after all answers, generate:
+
+OUTPUT 1 — my tailored CLAUDE.md
+include: who i am | clients/projects | tools | focus this month | tasks to automate
+must include:
+- how to navigate this project: explore folders freely. find client folders when asked. if a skill exists for a task, use it — don't improvise.
+- how to work with me: ask ONE clarifying question when unclear. confirm before any irreversible action. flag anything risky before continuing.
+- my rules (never do without asking)
+
+OUTPUT 2 — folder structure
+00_Inbox/ → quick capture
+01_Projects/Clients/Active/ → one folder per client, 4 files: README, Communication-Log, Progress, Technical
+02_Areas/ → ongoing responsibilities
+03_Resources/ → reference and knowledge
+CLAUDE.md ← the file we just built
+
+OUTPUT 3 — first 3 MCPs
+based on their tools. one line each: tool → what it unlocks in the terminal. tell them to start with 2.`;
+
+function copyMainPrompt() {
+  const btn = document.getElementById('copy-main-btn');
+  navigator.clipboard.writeText(PROMPT_TEXT).then(() => {
+    btn.innerHTML = '<span>✓ prompt copied!</span>';
+    btn.classList.add('ok');
+    STATE.promptCopied = true;
+    launchConfetti(1.0);
+    achieve('CLAUDE.md prompt copied 🧠');
+    setTimeout(() => {
+      btn.innerHTML = '<span>copy the prompt</span>';
+      btn.classList.remove('ok');
+      document.getElementById('after-copy-row').style.display = 'flex';
+    }, 2500);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = PROMPT_TEXT; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.innerHTML = '<span>✓ copied!</span>'; btn.classList.add('ok');
+    STATE.promptCopied = true;
+    launchConfetti(1.0); achieve('CLAUDE.md prompt copied 🧠');
+    setTimeout(() => { btn.innerHTML = '<span>copy the prompt</span>'; btn.classList.remove('ok'); document.getElementById('after-copy-row').style.display='flex'; }, 2500);
+  });
+}
+
+function copyCode(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent; btn.textContent = '✓ copied'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+function showHelp() { toast('message me on LinkedIn — linkedin.com/in/walid-boulanouar 💬', '💬'); }
+
+/* ── TOAST ── */
+let toastTimer;
+function toast(msg, icon='✓') {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-icon').textContent = icon;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function achieve(msg) {
+  toast(msg, '🏅');
+}
+
+/* ── CONFETTI ── */
+const canvas = document.getElementById('confetti-canvas');
+const ctx2 = canvas.getContext('2d');
+let particles = [];
+let confettiRaf;
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+function launchConfetti(intensity) {
+  const count = Math.floor(intensity * 120);
+  const colors = ['#8182C1','#A3A4D8','#4ade80','#fbbf24','#f0edee','#f87171','#60a5fa'];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: canvas.height * 0.6 + Math.random() * canvas.height * 0.4,
+      vx: (Math.random() - 0.5) * 12,
+      vy: -(Math.random() * 14 + 6),
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 8,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: Math.random() > 0.5 ? 'rect' : 'circle',
+      life: 1,
+      decay: Math.random() * 0.015 + 0.008
+    });
+  }
+  if (!confettiRaf) confettiLoop();
+}
+
+function confettiLoop() {
+  ctx2.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.35;
+    p.vx *= 0.99; p.rot += p.rotV; p.life -= p.decay;
+    ctx2.save();
+    ctx2.globalAlpha = Math.max(0, p.life);
+    ctx2.translate(p.x, p.y);
+    ctx2.rotate(p.rot * Math.PI / 180);
+    ctx2.fillStyle = p.color;
+    if (p.shape === 'rect') ctx2.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    else { ctx2.beginPath(); ctx2.arc(0,0,p.size/2,0,Math.PI*2); ctx2.fill(); }
+    ctx2.restore();
+  }
+  if (particles.length > 0) confettiRaf = requestAnimationFrame(confettiLoop);
+  else { confettiRaf = null; ctx2.clearRect(0,0,canvas.width,canvas.height); }
+}
+
+/* ── INIT ── */
+updateProgress();
+
+// fire confetti on done screen
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach(m => {
+    if (m.type === 'attributes' && m.attributeName === 'class') {
+      const el = m.target;
+      if (el.id === 's-done' && el.classList.contains('active')) {
+        setTimeout(() => launchConfetti(1.5), 300);
+        setTimeout(() => launchConfetti(1.0), 1200);
+      }
+    }
+  });
+});
+document.getElementById('s-done') && observer.observe(document.getElementById('s-done'), { attributes: true });
+</script>
+</body>
+</html>
